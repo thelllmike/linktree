@@ -19,12 +19,14 @@ interface Props {
   business: Business
 }
 
-const INITIAL = { error: undefined as string | undefined, success: false }
+type FormState = { error?: string; success?: boolean }
+
+const INITIAL: FormState = { error: undefined, success: false }
 
 export function EditBusinessForm({ business }: Props) {
   const updateWithId = updateBusiness.bind(null, business.id)
   const [state, formAction, isPending] = useActionState(
-    async (_prev: typeof INITIAL, formData: FormData) => {
+    async (_prev: FormState, formData: FormData): Promise<FormState> => {
       const result = await updateWithId(formData)
       return result ?? INITIAL
     },

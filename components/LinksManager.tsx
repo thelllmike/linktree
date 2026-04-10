@@ -12,12 +12,14 @@ interface Props {
   links: SocialLink[]
 }
 
-const ADD_INIT = { error: undefined as string | undefined, success: false }
+type AddFormState = { error?: string; success?: boolean }
+
+const ADD_INIT: AddFormState = { error: undefined, success: false }
 
 function AddLinkForm({ businessId, onSuccess }: { businessId: string; onSuccess: () => void }) {
   const addWithId = addSocialLink.bind(null, businessId)
   const [state, formAction, isPending] = useActionState(
-    async (_prev: typeof ADD_INIT, formData: FormData) => {
+    async (_prev: AddFormState, formData: FormData): Promise<AddFormState> => {
       const result = await addWithId(formData)
       if (result?.success) {
         onSuccess()
@@ -114,7 +116,7 @@ function LinkRow({ link, businessId }: { link: SocialLink; businessId: string })
 
   const updateWithIds = updateSocialLink.bind(null, link.id, businessId)
   const [state, formAction, isPending] = useActionState(
-    async (_prev: { error?: string }, formData: FormData) => {
+    async (_prev: AddFormState, formData: FormData): Promise<AddFormState> => {
       const result = await updateWithIds(formData)
       if (result?.success) {
         setEditing(false)
@@ -123,7 +125,7 @@ function LinkRow({ link, businessId }: { link: SocialLink; businessId: string })
       }
       return result ?? {}
     },
-    {}
+    {} as AddFormState
   )
 
   if (editing) {

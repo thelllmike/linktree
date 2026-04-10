@@ -14,11 +14,13 @@ function toSlug(str: string) {
     .replace(/^-|-$/g, '')
 }
 
-const INITIAL_STATE = { error: undefined as string | undefined }
+type FormState = { error?: string }
+
+const INITIAL_STATE: FormState = { error: undefined }
 
 export function CreateBusinessForm() {
   const [state, formAction, isPending] = useActionState(
-    async (_prev: typeof INITIAL_STATE, formData: FormData) => {
+    async (_prev: FormState, formData: FormData): Promise<FormState> => {
       const result = await createBusiness(formData)
       return result ?? INITIAL_STATE
     },
