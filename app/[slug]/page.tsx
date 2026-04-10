@@ -182,7 +182,7 @@ export default async function PublicBusinessPage({
         <div className="mt-12 animate-fade-up">
           <p className="text-gray-300 text-xs text-center font-mono">
             powered by{' '}
-            <span className="font-semibold text-gray-400">LinkBase</span>
+            <span className="font-semibold text-gray-400">CLEVERPROJECT</span>
           </p>
         </div>
       </div>
