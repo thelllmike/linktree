@@ -1,6 +1,6 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'
+import { createSupabaseServer } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -15,6 +15,10 @@ function toSlug(str: string) {
 }
 
 export async function createBusiness(formData: FormData) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
   const name = (formData.get('name') as string)?.trim()
   const description = (formData.get('description') as string)?.trim() || null
   const avatar_url = (formData.get('avatar_url') as string)?.trim() || null
@@ -26,9 +30,11 @@ export async function createBusiness(formData: FormData) {
   const slug = customSlug ? toSlug(customSlug) : toSlug(name)
   if (!slug) return { error: 'Invalid slug' }
 
+  const type = (formData.get('type') as string) || 'linkpage'
+
   const { data, error } = await supabase
     .from('businesses')
-    .insert({ name, slug, description, avatar_url, theme_color })
+    .insert({ name, slug, description, avatar_url, theme_color, user_id: user.id, type })
     .select()
     .single()
 
@@ -38,10 +44,17 @@ export async function createBusiness(formData: FormData) {
   }
 
   revalidatePath('/')
+  if (type === 'businesscard') {
+    redirect(`/admin/card/${data.id}`)
+  }
   redirect(`/admin/${data.id}`)
 }
 
 export async function updateBusiness(id: string, formData: FormData) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
   const name = (formData.get('name') as string)?.trim()
   const description = (formData.get('description') as string)?.trim() || null
   const avatar_url = (formData.get('avatar_url') as string)?.trim() || null
@@ -55,6 +68,7 @@ export async function updateBusiness(id: string, formData: FormData) {
     .from('businesses')
     .update({ name, slug, description, avatar_url, theme_color })
     .eq('id', id)
+    .eq('user_id', user.id)
 
   if (error) {
     if (error.code === '23505') return { error: 'This URL is already taken.' }
@@ -67,18 +81,41 @@ export async function updateBusiness(id: string, formData: FormData) {
 }
 
 export async function deleteBusiness(id: string) {
-  const { error } = await supabase.from('businesses').delete().eq('id', id)
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('businesses')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+
   if (error) return { error: error.message }
   revalidatePath('/')
   redirect('/')
 }
 
 export async function addSocialLink(businessId: string, formData: FormData) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
   const platform = (formData.get('platform') as string)?.trim()
   const url = (formData.get('url') as string)?.trim()
   const label = (formData.get('label') as string)?.trim() || null
 
   if (!platform || !url) return { error: 'Platform and URL are required' }
+
+  // Verify ownership
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('id')
+    .eq('id', businessId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!biz) return { error: 'Not authorized' }
 
   // get current max order
   const { data: existing } = await supabase
@@ -101,11 +138,25 @@ export async function addSocialLink(businessId: string, formData: FormData) {
 }
 
 export async function updateSocialLink(linkId: string, businessId: string, formData: FormData) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
   const platform = (formData.get('platform') as string)?.trim()
   const url = (formData.get('url') as string)?.trim()
   const label = (formData.get('label') as string)?.trim() || null
 
   if (!platform || !url) return { error: 'Platform and URL are required' }
+
+  // Verify ownership
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('id')
+    .eq('id', businessId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!biz) return { error: 'Not authorized' }
 
   const { error } = await supabase
     .from('social_links')
@@ -119,8 +170,80 @@ export async function updateSocialLink(linkId: string, businessId: string, formD
 }
 
 export async function deleteSocialLink(linkId: string, businessId: string) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  // Verify ownership
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('id')
+    .eq('id', businessId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!biz) return { error: 'Not authorized' }
+
   const { error } = await supabase.from('social_links').delete().eq('id', linkId)
   if (error) return { error: error.message }
   revalidatePath(`/admin/${businessId}`)
+  return { success: true }
+}
+
+export async function updateCardConfig(id: string, cardConfig: Record<string, string>) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('businesses')
+    .update({ card_config: cardConfig })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/admin/card/${id}`)
+  return { success: true }
+}
+
+export async function updateCardDetails(id: string, formData: FormData) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const name = (formData.get('name') as string)?.trim()
+  const description = (formData.get('description') as string)?.trim() || null
+  const slug = toSlug((formData.get('slug') as string)?.trim() || '')
+
+  if (!name) return { error: 'Business name is required' }
+  if (!slug) return { error: 'Invalid slug' }
+
+  const card_config = {
+    template: (formData.get('template') as string) || 'classic',
+    person_name: (formData.get('person_name') as string)?.trim() || '',
+    person_title: (formData.get('person_title') as string)?.trim() || '',
+    background_url: (formData.get('background_url') as string)?.trim() || '',
+    background_color: (formData.get('background_color') as string) || '#87CEEB',
+    logo_url: (formData.get('logo_url') as string)?.trim() || '',
+    font_family: (formData.get('font_family') as string) || 'DM Sans',
+    text_color: (formData.get('text_color') as string) || '#000000',
+    button_style: (formData.get('button_style') as string) || 'rounded',
+    button_color: (formData.get('button_color') as string) || '#2d3748',
+  }
+
+  const { error } = await supabase
+    .from('businesses')
+    .update({ name, description, slug, card_config })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) {
+    if (error.code === '23505') return { error: 'This URL is already taken.' }
+    return { error: error.message }
+  }
+
+  revalidatePath('/')
+  revalidatePath(`/admin/card/${id}`)
   return { success: true }
 }
