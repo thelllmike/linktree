@@ -62,8 +62,15 @@ export function BusinessCard({ business }: BusinessCardProps) {
         </div>
       </div>
 
-      {/* Links count */}
+      {/* Type badge + links count */}
       <div className="flex items-center gap-2 mb-5">
+        <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+          business.type === 'businesscard'
+            ? 'bg-blue-500/10 text-blue-400'
+            : 'bg-[#C8FF00]/10 text-[#C8FF00]'
+        }`}>
+          {business.type === 'businesscard' ? 'Card' : 'Links'}
+        </span>
         <span className="text-[#444] text-xs font-mono">
           {business.social_links?.length ?? 0} links
         </span>
@@ -99,7 +106,7 @@ export function BusinessCard({ business }: BusinessCardProps) {
       {/* Actions */}
       <div className="flex gap-2">
         <Link
-          href={`/admin/${business.id}`}
+          href={business.type === 'businesscard' ? `/admin/card/${business.id}` : `/admin/${business.id}`}
           className="flex-1 flex items-center justify-center gap-2 bg-[#C8FF00] text-black text-xs font-semibold py-2.5 rounded-lg hover:bg-[#D4FF33] transition-colors"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

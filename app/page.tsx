@@ -1,14 +1,21 @@
-import { supabase } from '@/lib/supabase'
+import { createSupabaseServer } from '@/lib/supabase-server'
 import { Business } from '@/types'
 import { BusinessCard } from '@/components/BusinessCard'
 import Link from 'next/link'
+import { LogoutButton } from '@/components/LogoutButton'
 
 export const dynamic = 'force-dynamic'
 
 async function getBusinesses(): Promise<Business[]> {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return []
+
   const { data, error } = await supabase
     .from('businesses')
     .select('*, social_links(*)')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -40,16 +47,19 @@ export default async function AdminDashboard() {
               LinkBase
             </span>
           </div>
-          <Link
-            href="/admin/new"
-            className="flex items-center gap-2 bg-[#C8FF00] text-black text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[#D4FF33] transition-colors"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            New Business
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/new"
+              className="flex items-center gap-2 bg-[#C8FF00] text-black text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[#D4FF33] transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              New Business
+            </Link>
+            <LogoutButton />
+          </div>
         </div>
       </header>
 

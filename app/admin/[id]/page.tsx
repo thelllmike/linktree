@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { createSupabaseServer } from '@/lib/supabase-server'
 import { Business, SocialLink } from '@/types'
 import { EditBusinessForm } from '@/components/EditBusinessForm'
 import { LinksManager } from '@/components/LinksManager'
@@ -8,10 +8,15 @@ import { notFound } from 'next/navigation'
 export const dynamic = 'force-dynamic'
 
 async function getBusiness(id: string): Promise<Business | null> {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
   const { data, error } = await supabase
     .from('businesses')
     .select('*')
     .eq('id', id)
+    .eq('user_id', user.id)
     .single()
 
   if (error || !data) return null
@@ -19,6 +24,7 @@ async function getBusiness(id: string): Promise<Business | null> {
 }
 
 async function getLinks(businessId: string): Promise<SocialLink[]> {
+  const supabase = await createSupabaseServer()
   const { data, error } = await supabase
     .from('social_links')
     .select('*')
