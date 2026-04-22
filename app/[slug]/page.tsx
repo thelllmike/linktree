@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { Business, SocialLink, CardConfig } from '@/types'
 import { PLATFORMS } from '@/components/platforms'
 import { PlatformIcon } from '@/components/PlatformIcon'
+import { BusinessCardPage } from '@/components/card/BusinessCardPage'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
@@ -33,133 +34,6 @@ export async function generateMetadata({
     title: business.name,
     description: business.description ?? `${business.name} — links`,
   }
-}
-
-/* ─── Business Card Layout ─── */
-function BusinessCardView({
-  business,
-  links,
-  config,
-}: {
-  business: Business
-  links: SocialLink[]
-  config: CardConfig
-}) {
-  const initials = business.name
-    .split(' ')
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-
-  const buttonRadius =
-    config.button_style === 'pill' ? '9999px'
-    : config.button_style === 'square' ? '8px'
-    : '12px'
-
-  const bgStyle: React.CSSProperties = {
-    backgroundColor: config.background_color || business.theme_color,
-    fontFamily: `${config.font_family}, sans-serif`,
-    color: config.text_color,
-  }
-
-  if (config.background_url) {
-    bgStyle.backgroundImage = `url(${config.background_url})`
-    bgStyle.backgroundSize = 'cover'
-    bgStyle.backgroundPosition = 'center'
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col items-center" style={bgStyle}>
-      {config.background_url && (
-        <div className="fixed inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-      )}
-
-      <div className="relative w-full max-w-md mx-auto px-6 py-14 flex flex-col items-center">
-        {/* Logo */}
-        {config.logo_url ? (
-          <img
-            src={config.logo_url}
-            alt={business.name}
-            className="w-24 h-24 object-contain mb-3 animate-fade-up"
-          />
-        ) : (
-          <div
-            className="w-24 h-24 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-3 animate-fade-up"
-            style={{ backgroundColor: business.theme_color + 'aa' }}
-          >
-            {initials}
-          </div>
-        )}
-
-        {/* Company name */}
-        <h2 className="font-bold text-center mb-0.5 uppercase tracking-wider text-sm animate-fade-up animate-fade-up-delay-1">
-          {business.name}
-        </h2>
-
-        {/* Tagline */}
-        {business.description && (
-          <p className="text-center opacity-70 text-[11px] uppercase tracking-widest mb-6 animate-fade-up animate-fade-up-delay-1">
-            {business.description}
-          </p>
-        )}
-
-        {/* Person name */}
-        {config.person_name && (
-          <h1
-            className="text-3xl font-bold text-center mt-4 mb-1 animate-fade-up animate-fade-up-delay-2"
-            style={{ fontFamily: 'Syne, sans-serif' }}
-          >
-            {config.person_name}
-          </h1>
-        )}
-
-        {/* Person title */}
-        {config.person_title && (
-          <p className="text-center font-medium text-base mb-3 animate-fade-up animate-fade-up-delay-2">
-            {config.person_title}
-          </p>
-        )}
-
-        {/* Bio area — spacer */}
-        <div className="mb-6" />
-
-        {/* Contact buttons */}
-        <div className="w-full space-y-3">
-          {links.map((link, i) => {
-            const platform = PLATFORMS[link.platform] ?? PLATFORMS.other
-            const label = link.label || platform.name
-            const delay = Math.min(i + 3, 6)
-
-            return (
-              <a
-                key={link.id}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`flex items-center gap-4 px-5 py-4 backdrop-blur-sm hover:opacity-90 transition-all duration-200 hover:-translate-y-0.5 animate-fade-up animate-fade-up-delay-${delay}`}
-                style={{
-                  backgroundColor: config.button_color + 'cc',
-                  borderRadius: buttonRadius,
-                  color: '#ffffff',
-                }}
-              >
-                <PlatformIcon platform={link.platform} size={20} />
-                <span className="font-semibold text-sm flex-1 text-center">{label}</span>
-              </a>
-            )
-          })}
-        </div>
-
-        {/* Powered by */}
-        <div className="mt-12 animate-fade-up">
-          <p className="text-xs text-center font-mono opacity-40">
-            powered by <span className="font-semibold">CLEVERPROJECT</span>
-          </p>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 /* ─── Link Page Layout (original) ─── */
@@ -303,7 +177,7 @@ export default async function PublicBusinessPage({
 
   if (business.type === 'businesscard' && business.card_config) {
     return (
-      <BusinessCardView
+      <BusinessCardPage
         business={business}
         links={links}
         config={business.card_config as CardConfig}

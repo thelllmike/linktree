@@ -24,7 +24,7 @@ export default function NewBusinessPage() {
               </svg>
             </div>
             <span className="text-white text-sm font-medium" style={{ fontFamily: 'Syne, sans-serif' }}>
-              LinkBase
+              CLEVER PROJECT
             </span>
           </div>
         </div>

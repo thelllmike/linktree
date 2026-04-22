@@ -51,4 +51,5 @@ export type Platform =
   | 'telegram'
   | 'snapchat'
   | 'pinterest'
+  | 'github'
   | 'other'
