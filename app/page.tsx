@@ -44,7 +44,7 @@ export default async function AdminDashboard() {
               className="text-white font-bold text-lg tracking-tight"
               style={{ fontFamily: 'Syne, sans-serif' }}
             >
-              LinkBase
+              CLEVER PROJECT
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -123,7 +123,7 @@ export default async function AdminDashboard() {
       {/* Footer */}
       <footer className="max-w-6xl mx-auto px-6 py-8 border-t border-[#1A1A1A] mt-10">
         <p className="text-[#444] text-xs font-mono text-center">
-          LINKBASE — Business Link Pages
+          CLEVER PROJECT — Business Link Pages
         </p>
       </footer>
     </div>

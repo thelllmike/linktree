@@ -63,7 +63,7 @@ export default function LoginPage() {
             className="text-white font-bold text-2xl tracking-tight"
             style={{ fontFamily: 'Syne, sans-serif' }}
           >
-            LinkBase
+            CLEVER PROJECT
           </span>
         </div>
 
@@ -137,7 +137,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-[#333] text-xs text-center mt-6 font-mono">
-          LINKBASE — Business Link Pages
+          CLEVER PROJECT — Business Link Pages
         </p>
       </div>
     </div>

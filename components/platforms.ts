@@ -66,6 +66,12 @@ export const PLATFORMS: Record<string, PlatformConfig> = {
     bg: '#FEE6E9',
     placeholder: 'https://pinterest.com/yourbusiness',
   },
+  github: {
+    name: 'GitHub',
+    color: '#ffffff',
+    bg: '#1A1B1E',
+    placeholder: 'https://github.com/yourusername',
+  },
   website: {
     name: 'Website',
     color: '#6B7280',
@@ -103,6 +109,7 @@ export const PLATFORM_ORDER = [
   'telegram',
   'snapchat',
   'pinterest',
+  'github',
   'website',
   'email',
   'phone',

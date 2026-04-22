@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'LinkBase — Business Link Pages',
+  title: 'CLEVER PROJECT — Business Link Pages',
   description: 'Create beautiful link-in-bio pages for your business',
 }
 
