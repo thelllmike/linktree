@@ -1,7 +1,8 @@
 import { createSupabaseServer } from '@/lib/supabase-server'
-import { Business, SocialLink } from '@/types'
+import { Business, SocialLink, BankAccount } from '@/types'
 import { EditBusinessForm } from '@/components/EditBusinessForm'
 import { LinksManager } from '@/components/LinksManager'
+import { BankAccountsManager } from '@/components/BankAccountsManager'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -35,13 +36,29 @@ async function getLinks(businessId: string): Promise<SocialLink[]> {
   return data ?? []
 }
 
+async function getBankAccounts(businessId: string): Promise<BankAccount[]> {
+  const supabase = await createSupabaseServer()
+  const { data, error } = await supabase
+    .from('bank_accounts')
+    .select('*')
+    .eq('business_id', businessId)
+    .order('display_order', { ascending: true })
+
+  if (error) return []
+  return data ?? []
+}
+
 export default async function EditBusinessPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [business, links] = await Promise.all([getBusiness(id), getLinks(id)])
+  const [business, links, bankAccounts] = await Promise.all([
+    getBusiness(id),
+    getLinks(id),
+    getBankAccounts(id),
+  ])
 
   if (!business) notFound()
 
@@ -126,9 +143,12 @@ export default async function EditBusinessPage({
           </div>
 
           {/* Right: Links */}
-          <div className="animate-fade-up animate-fade-up-delay-2">
+          <div className="animate-fade-up animate-fade-up-delay-2 space-y-8">
             <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-6">
               <LinksManager businessId={business.id} links={links} />
+            </div>
+            <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-6">
+              <BankAccountsManager businessId={business.id} accounts={bankAccounts} />
             </div>
           </div>
         </div>
