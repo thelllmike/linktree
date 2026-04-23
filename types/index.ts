@@ -25,6 +25,7 @@ export interface Business {
   card_config: CardConfig | null
   created_at: string
   social_links?: SocialLink[]
+  bank_accounts?: BankAccount[]
 }
 
 export interface SocialLink {
@@ -33,6 +34,17 @@ export interface SocialLink {
   platform: string
   url: string
   label: string | null
+  display_order: number
+  created_at: string
+}
+
+export interface BankAccount {
+  id: string
+  business_id: string
+  bank_name: string
+  account_name: string
+  account_number: string
+  branch: string | null
   display_order: number
   created_at: string
 }

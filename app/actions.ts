@@ -190,6 +190,102 @@ export async function deleteSocialLink(linkId: string, businessId: string) {
   return { success: true }
 }
 
+export async function addBankAccount(businessId: string, formData: FormData) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const bank_name = (formData.get('bank_name') as string)?.trim()
+  const account_name = (formData.get('account_name') as string)?.trim()
+  const account_number = (formData.get('account_number') as string)?.trim()
+  const branch = (formData.get('branch') as string)?.trim() || null
+
+  if (!bank_name || !account_name || !account_number) {
+    return { error: 'Bank name, account name, and account number are required' }
+  }
+
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('id')
+    .eq('id', businessId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!biz) return { error: 'Not authorized' }
+
+  const { data: existing } = await supabase
+    .from('bank_accounts')
+    .select('display_order')
+    .eq('business_id', businessId)
+    .order('display_order', { ascending: false })
+    .limit(1)
+
+  const display_order = existing && existing.length > 0 ? existing[0].display_order + 1 : 0
+
+  const { error } = await supabase
+    .from('bank_accounts')
+    .insert({ business_id: businessId, bank_name, account_name, account_number, branch, display_order })
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/admin/${businessId}`)
+  return { success: true }
+}
+
+export async function updateBankAccount(accountId: string, businessId: string, formData: FormData) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const bank_name = (formData.get('bank_name') as string)?.trim()
+  const account_name = (formData.get('account_name') as string)?.trim()
+  const account_number = (formData.get('account_number') as string)?.trim()
+  const branch = (formData.get('branch') as string)?.trim() || null
+
+  if (!bank_name || !account_name || !account_number) {
+    return { error: 'Bank name, account name, and account number are required' }
+  }
+
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('id')
+    .eq('id', businessId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!biz) return { error: 'Not authorized' }
+
+  const { error } = await supabase
+    .from('bank_accounts')
+    .update({ bank_name, account_name, account_number, branch })
+    .eq('id', accountId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/admin/${businessId}`)
+  return { success: true }
+}
+
+export async function deleteBankAccount(accountId: string, businessId: string) {
+  const supabase = await createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('id')
+    .eq('id', businessId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!biz) return { error: 'Not authorized' }
+
+  const { error } = await supabase.from('bank_accounts').delete().eq('id', accountId)
+  if (error) return { error: error.message }
+  revalidatePath(`/admin/${businessId}`)
+  return { success: true }
+}
+
 export async function updateCardConfig(id: string, cardConfig: Record<string, string>) {
   const supabase = await createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
